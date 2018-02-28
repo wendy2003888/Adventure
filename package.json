@@ -1,0 +1,16 @@
+{
+  "name": "ipfsAdventure",
+  "version": "1.0.0",
+  "description": "ipfs-api examples",
+  "main": "app.js",
+  "scripts": {},
+  "keywords": [
+    "IPFS"
+  ],
+  "author": "wendy2003888",
+  "license": "MIT",
+  "dependencies": {
+    "ipfs": "^0.27.7"
+  },
+  "devDependencies": {}
+}
