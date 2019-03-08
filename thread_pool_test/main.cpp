@@ -3,7 +3,8 @@
 
 static void* func(void* params) {
     printf("here");
-    pthread_exit(NULL);
+//    pthread_exit(NULL);
+    // why do you want to kill the thread here
     return NULL;
 }
 
