@@ -16,7 +16,6 @@ public:
 
     void Run() {
         pthread_mutex_lock(&mu_);
-        printf("inside run");
         (*func_)(args_);
         pthread_mutex_unlock(&mu_);
     }
@@ -38,11 +37,9 @@ public:
     }
 
     ~ThreadPool() {
+        Stop();
         if (!jobs_.empty()) {
             jobs_.pop();
-        }
-        for (int i = 0; i < threads_.size(); ++i) {
-            pthread_join(threads_[i], NULL);
         }
         pthread_cond_destroy(&q_cond_);
         pthread_mutex_destroy(&q_mu_);
@@ -59,17 +56,24 @@ public:
 
     void* Execute() {
         while (1) {
+            Job* job = nullptr;
             pthread_mutex_lock(&q_mu_);
             printf("wait job\n");
             while (!stop_ && jobs_.empty()) {
                 pthread_cond_wait(&q_cond_, &q_mu_);
             }
-            Job* job = jobs_.front();
-            jobs_.pop(); // Not working here
-            job->Run();
-            delete(job);
+            if (stop_) {
+                pthread_mutex_unlock(&q_mu_);
+                break;
+            }
+            job = jobs_.front();
+            jobs_.pop();
             printf("remain job %d\n", (int)jobs_.size());
             pthread_mutex_unlock(&q_mu_);
+            if (job != nullptr) {
+                job->Run();
+                delete(job);
+            }
         }
         pthread_exit(NULL);
         return NULL;
@@ -79,9 +83,24 @@ public:
         return static_cast<ThreadPool*>(self)->Execute();
     }
 
-    // void Stop() {
-    //     stop_ = true;
-    // }
+    int JobSize() {
+        int size = 0;
+        pthread_mutex_lock(&q_mu_);
+        size = jobs_.size();
+        pthread_mutex_unlock(&q_mu_);
+        return size;
+    }
+
+    void Stop() {
+        if (stop_) {
+            return;
+        }
+        stop_ = true;
+        pthread_cond_broadcast(&q_cond_);
+        for (int i = 0; i < threads_.size(); ++i) {
+            pthread_join(threads_[i], NULL);
+        }
+    }
 
 private:
     int num = 0;
