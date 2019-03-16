@@ -15,30 +15,27 @@ public:
             try {
             socket_.connect("tcp://127.0.0.1:5555");
             } catch (zmq::error_t e) {
-                std::cout<<e.what()<<std::endl;
+                printf("%s\n", e.what());
                 return;
             }
             item = zmq::pollitem_t({static_cast<void*>(socket_), 0, ZMQ_POLLIN, 0});
 
             const int TIMEOUT = 10000;
-            while (1) {
-                zmq::poll(&item, 1, TIMEOUT);
-                if (item.revents & ZMQ_POLLIN) {
-                    bool next = true;
-                    while (next) {
-                        zmq::message_t msg;
-                        if (!socket_.recv(&msg, 0)) {
-                            return;
-                        }
-                        next = msg.more();
-                        int i;
-                        memcpy(&i, msg.data(), msg.size());
-                        std::cout<<i<<" thread id "<<this_id<<std::endl;
+            zmq::poll(&item, 1, TIMEOUT);
+            if (item.revents & ZMQ_POLLIN) {
+                bool next = true;
+                while (next) {
+                    zmq::message_t msg;
+                    if (!socket_.recv(&msg, 0)) {
+                        return;
                     }
-                } else {
-                    return;
+                    next = msg.more();
+                    int i;
+                    memcpy(&i, msg.data(), msg.size());
+                    std::cout<<i<<" thread id "<<this_id<<std::endl;
                 }
-                
+            } else {
+                return;
             }
         }
     }
@@ -57,8 +54,8 @@ int main() {
     for (int i =0; i < numth; i++) {
         th[i] = std::thread(&Test::run, new Test());
     }
-    th[2].join();
-    th[0].join();
-    th[1].join();
+    for (int i = 0; i < numth; ++i) {
+        th[i].join();
+    }
     return 0;
 }

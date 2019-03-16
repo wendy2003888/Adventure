@@ -9,8 +9,6 @@ int main() {
     } catch (zmq::error_t e) {
         std::cout<<e.what()<<std::endl;
     }
-    
-
 
     const int num = 3;
     const int parts = 3;
@@ -18,9 +16,10 @@ int main() {
         for (int j = 0; j <  parts; ++j) {
             int tmp = i;
              zmq::message_t msg (sizeof(tmp));
-    //    sleep(1);
+
             memcpy (msg.data(), &tmp, sizeof(tmp));
             socket.send (msg, j == parts - 1 ? 0 : ZMQ_SNDMORE);
+            sleep(1);
         }
     }       
     return 0;

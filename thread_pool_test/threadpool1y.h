@@ -29,7 +29,7 @@ class ThreadPool{
 public:
     ThreadPool(const int num) : threads_(num), stop_(false) {
         for (int i = 0; i < num; ++i) {
-            threads_[i] = thread([](ThreadPool* self){ self->Execute(); }, this);
+            threads_[i] = thread([this](){ this->Execute(); });
         }
     }
 
